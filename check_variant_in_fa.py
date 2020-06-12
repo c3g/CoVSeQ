@@ -19,16 +19,17 @@ def parse_args():
 
     parser.add_argument('-c',
                         '--consensus',
-                        help="consensus fasta file",
+                        help="Consensus fasta file",
                         required=True)
+
     parser.add_argument('-v',
                         '--vcf',
-                        help="variants vcf file",
+                        help="Variants vcf file",
                         required=True)
 
     parser.add_argument('-r',
                         '--reference',
-                        help="reference fasta file",
+                        help="Reference fasta file",
                         required=True)
 
     parser.add_argument('-w',
@@ -37,6 +38,12 @@ def parse_args():
                         default=6,
                         type=int,
                         required=False)
+
+    parser.add_argument('-o',
+                        '--output',
+                        help="tsv file with variants found within vcf file (Default: stdout)",
+                        type=argparse.FileType('w'),
+                        default='-')
 
     return parser.parse_args()
 
@@ -54,6 +61,25 @@ def check_consensus_size(fasta_file, reference_index):
 The variants can't be checked.\n""" % (len(record.seq), ref_len))
             ret = False
     return ret
+
+def store_current_out(variant, consensus, reference, sample, window, deletion, insertion, variant_type, variant_match, context_match, out_list):
+    ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window])
+    cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
+    if variant_type == "deletion":
+        ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
+    elif variant_type == "insertion":
+        cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
+    out_list.append([
+        str(variant.POS),
+        variant.REF,
+        variant.ALT,
+        str(sample['alt_FREQ']),
+        str(sample['alt_DP']),
+        ref_interval,
+        cons_interval,
+        str(variant_match),
+        str(context_match)
+        ])
 
 def check_variants(vcf_file, consensus_file, reference_file, window):
     """
@@ -76,18 +102,25 @@ def check_variants(vcf_file, consensus_file, reference_file, window):
                     #         print(nt_r, consensus.seq[indice])
                     # print(len(variant.REF) - len(variant.ALT))
 
+                    variant_match = True
+
                     # deletion within variant
                     if len(variant.REF) - len(variant.ALT) > 0:
-                        if consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion : variant.POS + window - deletion + insertion] == reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]:
-                            out_list.append([
-                                str(variant.POS),
-                                variant.REF,
-                                variant.ALT,
-                                str(sample['alt_FREQ']),
-                                str(sample['alt_DP']),
-                                str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]),
-                                str(consensus.seq[variant.POS - (window + deletion - insertion) - 1 : variant.POS - 1] + "." + variant.ALT + "." + consensus.seq[variant.POS : variant.POS + window - (deletion + insertion)])
-                                ])
+                        context_match = consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion : variant.POS + window - deletion + insertion] == reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]
+                        variant_match = variant.ALT == consensus.seq[variant.POS - 1 - deletion + insertion : variant.POS - deletion + insertion] and consensus.seq[variant.POS - deletion : variant.POS + window - deletion + insertion] == reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]
+                        # if consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion : variant.POS + window - deletion + insertion] == reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]:
+                        #     context_match = True
+                        # else:
+                        #     context_match = False
+                            # out_list.append([
+                            #     str(variant.POS),
+                            #     variant.REF,
+                            #     variant.ALT,
+                            #     str(sample['alt_FREQ']),
+                            #     str(sample['alt_DP']),
+                            #     str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]),
+                            #     str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
+                            #     ])
                             # print(
                             #     variant.POS,
                             #     variant.REF,
@@ -97,21 +130,27 @@ def check_variants(vcf_file, consensus_file, reference_file, window):
                             #     reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))],
                             #     consensus.seq[variant.POS - (window + deletion - insertion) - 1 : variant.POS - 1] + "." + variant.ALT + "." + consensus.seq[variant.POS : variant.POS + window - (deletion + insertion)]
                             #     )
-                            deletion += (len(variant.REF) - len(variant.ALT))
+                        store_current_out(variant, consensus, reference, sample, window, deletion, insertion, "deletion", variant_match, context_match, out_list)
+                        deletion += (len(variant.REF) - len(variant.ALT))
                             # exit()
 
                     # insertion within variant
                     elif len(variant.REF) - len(variant.ALT) < 0:
-                        if consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))] == reference.seq[variant.POS : variant.POS + window]:
-                            out_list.append([
-                                str(variant.POS),
-                                variant.REF,
-                                variant.ALT,
-                                str(sample['alt_FREQ']),
-                                str(sample['alt_DP']),
-                                str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window]),
-                                str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
-                                ])
+                        context_match = consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))] == reference.seq[variant.POS : variant.POS + window]
+                        variant_match = variant.ALT == consensus.seq[variant.POS - 1 - deletion + insertion : variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF))]
+                        # if consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))] == reference.seq[variant.POS : variant.POS + window]:
+                        #     context_match = True
+                        # else:
+                        #     context_match = False
+                            # out_list.append([
+                            #     str(variant.POS),
+                            #     variant.REF,
+                            #     variant.ALT,
+                            #     str(sample['alt_FREQ']),
+                            #     str(sample['alt_DP']),
+                            #     str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window]),
+                            #     str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
+                            #     ])
                             # print(
                             #     variant.POS,
                             #     variant.REF,
@@ -121,19 +160,27 @@ def check_variants(vcf_file, consensus_file, reference_file, window):
                             #     reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window],
                             #     consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))]
                             #     )
-                            insertion += (len(variant.ALT) - len(variant.REF))
+                        store_current_out(variant, consensus, reference, sample, window, deletion, insertion, "insertion", variant_match, context_match, out_list)
+                        insertion += (len(variant.ALT) - len(variant.REF))
                         # print(variant.POS, variant.REF, variant.ALT, consensus.seq[variant.POS - (window + 1 + deletion - insertion) : variant.POS + window - (deletion + insertion) + abs(len(variant.REF) - len(variant.ALT))], reference.seq[variant.POS - (window + 1) : variant.POS + window], sample['alt_FREQ'], sample['alt_DP'])
 
                     else:
-                        out_list.append([
-                            str(variant.POS),
-                            variant.REF,
-                            variant.ALT,
-                            str(sample['alt_FREQ']),
-                            str(sample['alt_DP']),
-                            str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))]),
-                            str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
-                            ])
+                        context_match = consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion] == reference.seq[variant.POS : variant.POS + window]
+                        variant_match = variant.ALT == consensus.seq[variant.POS - 1 - deletion + insertion : variant.POS - deletion + insertion]
+                        # if consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] == reference.seq[variant.POS - window - 1 : variant.POS - 1] and consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion] == reference.seq[variant.POS : variant.POS + window]:
+                        #     context_match = True
+                        # else:
+                        #     context_match = False
+                        store_current_out(variant, consensus, reference, sample, window, deletion, insertion, None, variant_match, context_match, out_list)
+                            # out_list.append([
+                            #     str(variant.POS),
+                            #     variant.REF,
+                            #     variant.ALT,
+                            #     str(sample['alt_FREQ']),
+                            #     str(sample['alt_DP']),
+                            #     str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window]),
+                            #     str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
+                            #     ])
                         # print(
                         #     variant.POS,
                         #     variant.REF,
@@ -158,8 +205,11 @@ def main():
     args = parse_args()
 
     variants_list = check_variants(args.vcf, args.consensus, args.reference, args.window)
-    print("POS\tREF\tALT\tALT_FREQ\tALT_DEPTH\tREF+-{window_size}\tCONSENSUS+-{window_size}".format(window_size=args.window))
+    print("POS\tREF\tALT\tALT_FREQ\tALT_DEPTH\tREF+-{window_size}\tCONSENSUS+-{window_size}\tVARIANT_MATCH_CONSENSUS\tCONTEXT_MATCH+-{window_size}".format(window_size=args.window))
     print("\n".join("\t".join(variant) for variant in variants_list))
+
+    # TODO: add a flag for context match and variant match
+
     # print("\n".join("\t".join(variant) for variant in check_variants(args.vcf, args.consensus)))
     # exit()
     # if check_consensus_size(args.consensus, args.index_reference):
