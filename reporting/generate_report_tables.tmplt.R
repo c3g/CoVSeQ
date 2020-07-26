@@ -70,10 +70,10 @@ final.column.names <- c("Sample",
                         "Nb clean reads",
                         "Mean coverage",
                         "Percent N",
-                        "Length low cov region (<50X)",
+                        "Length low cov region (<20X)",
                         "Percent consensus > 100X",
                         "Length consensus",
-                        "Nb variants > 20 perc allele freq",
+                        "Nb variants > 10 perc allele freq",
                         "Nb variants > 75 perc allele freq",
                         "PASS/FLAG/REJ")
 
@@ -82,16 +82,16 @@ final.column.names <- c("Sample",
 
 variant.numbers <- tibble(
   Sample = character(), 
-  var.num.20.more = numeric(), 
+  var.num.10.more = numeric(), 
   var.num.75.more = numeric()
 )
 
 for (sample in readset.table$Sample) {
   vcf.table <- read_vcf_plus(sample)
   write_csv(vcf.table, path = file.path("sample_reports", paste0(sample, "_vcf_info.csv")))
-  var.num.20 <- vcf.table %>% filter(alt.FREQ > 0.2) %>% tally() %>% pull(n)
+  var.num.10 <- vcf.table %>% filter(alt.FREQ > 0.10) %>% tally() %>% pull(n)
   var.num.75 <- vcf.table %>% filter(alt.FREQ > 0.75) %>% tally() %>% pull(n)
-  variant.numbers <- add_row(variant.numbers, Sample = sample, var.num.20.more = var.num.20, var.num.75.more = var.num.75) 
+  variant.numbers <- add_row(variant.numbers, Sample = sample, var.num.10.more = var.num.10, var.num.75.more = var.num.75) 
 }
 
 
@@ -107,6 +107,7 @@ full.table <- full.table %>%
                   mutate(cons.per.N = as.numeric(cons.per.N)) %>%
                   mutate(total.reads = Total_aligned + Unmapped_only) %>% 
                   mutate(status = sample.status) %>% 
+                  mutate(Human_only_perc = round(Human_only_perc, 2) %>% 
                   mutate(consensus.length = 29903 - (cons.per.N /100 * 29903)) %>% 
                   mutate(length.lowcov = 29903 - (bam.perc.50x /100 * 29903)) %>% mutate(length.lowcov = as.integer(length.lowcov)) 
                   
@@ -120,7 +121,7 @@ final.columns <- c("Sample",
                    "length.lowcov",
                    "bam.perc.100x",
                    "consensus.length",
-                   "var.num.20.more",
+                   "var.num.10.more",
                    "var.num.75.more",
                    "status"
 )
