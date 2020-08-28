@@ -9,11 +9,11 @@ set -eu -o pipefail
 module purge 
 module load mugqic/R_Bioconductor/3.5.3_3.8
 PROJ="/lustre03/project/6007512/C3G/projects/Moreira_COVID19_Genotyping"
-REPORT_TMPLTS="${PROJ}/hgalvez/sample_reporting"
-GENPIPES_VERSION="covseq_v1.0beta"
+REPORT_TMPLTS="${PROJ}/hgalvez/CoVSeQ/reporting"
+GENPIPES_VERSION="genpipes/covid_release/1.0"
 
 # Define samples and names
-RUN_NAME="test_run"
+RUN_NAME=""
 RUN_PATH="${PROJ}/hgalvez/sample_reporting/${RUN_NAME}"
 mkdir -p report/sample_reports 
 cd ${RUN_PATH}/report
@@ -35,6 +35,6 @@ grep "^module_" ../CoVSeQ.config.trace.ini | sed s:=:,:g > module_table.tmp.csv
 
 Rscript generate_report_tables.R
 
-Rscript -e "rmarkdown::render('run_report.Rmd')"
+Rscript -e "rmarkdown::render('run_report.Rmd', output_format = 'all')"
 
 rm module_table.tmp.csv
