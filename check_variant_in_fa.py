@@ -66,7 +66,7 @@ def store_current_out(variant, consensus, reference, sample, window, deletion, i
     ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window])
     cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + consensus.seq[variant.POS - 1 - deletion + insertion: variant.POS - deletion + insertion] + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
     if variant_type == "deletion":
-        ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
+        ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + reference.seq[variant.POS - 1 : variant.POS + (len(variant.REF) - len(variant.ALT))] + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
     elif variant_type == "insertion":
         cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + consensus.seq[variant.POS - 1 - deletion + insertion : variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF))] + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
     out_list.append([
