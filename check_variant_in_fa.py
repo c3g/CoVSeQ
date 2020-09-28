@@ -64,7 +64,7 @@ The variants can't be checked.\n""" % (len(record.seq), ref_len))
 
 def store_current_out(variant, consensus, reference, sample, window, deletion, insertion, variant_type, variant_match, context_match, out_list):
     ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window])
-    cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
+    cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + consensus.seq[variant.POS - 1 - deletion + insertion: variant.POS - deletion + insertion] + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
     if variant_type == "deletion":
         ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
     elif variant_type == "insertion":
