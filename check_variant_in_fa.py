@@ -68,7 +68,7 @@ def store_current_out(variant, consensus, reference, sample, window, deletion, i
     if variant_type == "deletion":
         ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
     elif variant_type == "insertion":
-        cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
+        cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + consensus.seq[variant.POS - 1 - deletion + insertion : variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF))] + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
     out_list.append([
         str(variant.POS),
         variant.REF,
