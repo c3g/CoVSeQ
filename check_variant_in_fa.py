@@ -204,6 +204,8 @@ def main():
     """
     args = parse_args()
 
+    check_consensus_size(args.consensus, args.index_reference)
+
     variants_list = check_variants(args.vcf, args.consensus, args.reference, args.window)
     print("POS\tREF\tALT\tALT_FREQ\tALT_DEPTH\tREF+-{window_size}\tCONSENSUS+-{window_size}\tVARIANT_MATCH_CONSENSUS\tCONTEXT_MATCH+-{window_size}".format(window_size=args.window))
     print("\n".join("\t".join(variant) for variant in variants_list))
