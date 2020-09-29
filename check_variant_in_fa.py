@@ -47,10 +47,11 @@ def parse_args():
 
     return parser.parse_args()
 
-def check_consensus_size(fasta_file, reference_index):
+def check_consensus_size(fasta_file, reference):
     """
     Returns a warning if the len of the consensus != len of reference
     """
+    reference_index = reference + ".fai"
     ret = True
     with open(reference_index, "r") as reference:
         for line in reference:
@@ -204,7 +205,7 @@ def main():
     """
     args = parse_args()
 
-    check_consensus_size(args.consensus, args.index_reference)
+    check_consensus_size(args.consensus, args.reference)
 
     variants_list = check_variants(args.vcf, args.consensus, args.reference, args.window)
     print("POS\tREF\tALT\tALT_FREQ\tALT_DEPTH\tREF+-{window_size}\tCONSENSUS+-{window_size}\tVARIANT_MATCH_CONSENSUS\tCONTEXT_MATCH+-{window_size}".format(window_size=args.window))
