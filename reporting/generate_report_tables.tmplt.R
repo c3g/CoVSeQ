@@ -10,7 +10,7 @@ CoV2.genome <- Seqinfo(seqnames = c("MN908947.3"), seqlengths = c(29903), isCirc
 
 read_vcf_plus <- function(sample.name){
   print(sample.name)
-  sample.vcf.path <- file.path("..","variant", sample.name, paste0(sample.name,".sorted.filtered.primerTrim.vcf"))
+  sample.vcf.path <- file.path("..","variant", sample.name, paste0(sample.name,".sorted.filtered.primerTrim.annotate.vcf"))
   sample.vcf <- readVcf(sample.vcf.path, CoV2.genome)
   
   if (dim(sample.vcf)[1] == 0 ){
@@ -21,21 +21,31 @@ read_vcf_plus <- function(sample.name){
     alt.allele <- c(NaN)
     variation <- c(NaN) 
     alt.FREQ <- c(NaN)
+    frameshift <- c(NaN)
     
       } 
   
   else if (dim(sample.vcf)[1] >= 1){ 
     
-    variant.ids <- geno(sample.vcf)$ALT_FREQ %>% rownames()
-    alt.FREQ  <- geno(sample.vcf)$ALT_FREQ %>% as_tibble() %>% pull(1) %>% as.double()
+    variant.ids <- geno(sample.vcf)$alt_FREQ %>% rownames()
+    alt.FREQ  <- geno(sample.vcf)$alt_FREQ %>% as_tibble() %>% pull(1) %>% as.double()
     position <- start(sample.vcf) %>% as.double()
     ref.allele <- ref(sample.vcf) %>% as.character()
     alt.allele <- alt(sample.vcf) %>% unlist() %>% as.character() 
     variation <- paste0(ref.allele, position, alt.allele)
+    # Colvoluted way to detect if there are frameshift variants using SnpEff annotation
+    frameshift.table <- info(sample.vcf)$ANN %>% # Extract annotation from VCF object
+      as_tibble() %>% # Since annotation is a list, first convert it to tibble
+      group_by(group) %>% # Singe variants have multiple annotations, first group them using the group variable of the tibble
+      summarise(detect.frameshift = str_detect(value, "frameshift")) # Next, check each annotation for the word "frameshift"
+    frameshift <- frameshift.table %>% group_by(group) %>% 
+      summarise(bool.frameshift = max(detect.frameshift)) %>% # Taking advantage of the groups and the fact that TRUE = 1, extract the max of each group, in essence telling you if there is at least one TRUE value in the previous step
+      pull(bool.frameshift) %>% # Keep only the last vector (consists of 0s and 1s)
+      as.logical() # Turn this vector into logical vector
     
     }
   
-  tibble(variant.ids, position, ref.allele, alt.allele, variation, alt.FREQ)
+  tibble(variant.ids, position, ref.allele, alt.allele, variation, alt.FREQ, frameshift)
 }
 
 
@@ -56,6 +66,38 @@ sample_status <- function(percent.N){
   else {
     "NA"
   }
+}
+
+read_tsv_plus <- function(sample.name){
+
+    print(sample.name)
+    sample.var.tsv.path <- file.path("..", "variant", sample.name, paste0(sample.name, ".variants.tsv"))
+    sample.var.tsv <- readr::read_tsv(sample.var.tsv.path)
+
+    if (dim(sample.var.tsv) == 0){ 
+
+    variant.ids <- c(NaN)
+    position <- c(NaN)
+    ref.allele <- c(NaN)
+    alt.allele <- c(NaN)
+    variation <- c(NaN) 
+    alt.FREQ <- c(NaN)
+
+   } 
+
+   else if (dim(sample.var.tsv) >= 1) { 
+
+    variant.ids <- sample.var.tsv %>% mutate(variant.id = paste0(REGION, ":", POS , "_", REF, "/", ALT)) %>% pull(variant.id)
+    alt.FREQ <- sample.var.tsv %>% pull(ALT_FREQ)
+    position <- sample.var.tsv %>% pull(POS)
+    ref.allele <- sample.var.tsv %>% pull(REF)
+    alt.allele <- sample.var.tsv %>% pull(ALT)
+    variation <- paste0(ref.allele, position, alt.allele)
+
+   } 
+
+   tibble(variant.ids, position, ref.allele, alt.allele, variation, alt.FREQ)
+
 }
 
 ###############################################################################
@@ -97,6 +139,7 @@ final.column.names <- c("Sample",
                         "Length consensus",
                         "Nb variants > 10 perc allele freq",
                         "Nb variants > 75 perc allele freq",
+ #                       "Potential Frameshifts", 
                         "PASS/FLAG/REJ")
 
 
@@ -105,14 +148,16 @@ final.column.names <- c("Sample",
 variant.numbers <- tibble(
   Sample = character(), 
   var.num.10.more = numeric(), 
-  var.num.75.more = numeric()
+  var.num.75.more = numeric(),
+#  frameshift = numeric()
 )
 
 for (sample in readset.table$Sample) {
-  vcf.table <- read_vcf_plus(sample)
-  write_csv(vcf.table, path = file.path("sample_reports", paste0(sample, "_vcf_info.csv")))
+  vcf.table <- read_tsv_plus(sample)
+  write_csv(vcf.table, path = file.path("sample_reports", paste0(sample, "_tsv_info.csv")))
   var.num.10 <- vcf.table %>% filter(alt.FREQ > 0.10) %>% tally() %>% pull(n)
   var.num.75 <- vcf.table %>% filter(alt.FREQ > 0.75) %>% tally() %>% pull(n)
+#  frameshift <- vcf.table %>% filter(frameshift == TRUE) %>% tally() %>% pull(n)
   variant.numbers <- add_row(variant.numbers, Sample = sample, var.num.10.more = var.num.10, var.num.75.more = var.num.75) 
 }
 
@@ -146,6 +191,7 @@ final.columns <- c("Sample",
                    "consensus.length",
                    "var.num.10.more",
                    "var.num.75.more",
+#                   "frameshift",
                    "status")
 
 final.table <- full.table %>% dplyr::select(final.columns) %>% rename_at(vars(final.columns), ~final.column.names)
