@@ -145,7 +145,7 @@ do
     bam_cov2000X=`awk '{if ($4 > 2000) {count = count + $3-$2}} END {if (count) {print count} else {print 0}}' $bam_bedgraph_file`
     bam_cov2000X=`echo "scale=2; 100*$bam_cov2000X/$genome_size" | bc -l`
 
-    bam_insertsize_file=`echo "metrics/dna/$sample/picard_metrics/$sample.all.metrics.insert_size_metrics"`
+    bam_insertsize_file=`echo "metrics/dna/$sample/picard_metrics/$sample.sorted.all.metrics.insert_size_metrics"`
     if [ -f "$bam_insertsize_file" ]; then
         bam_meaninsertsize=`awk 'NR==8 {print $6}' $bam_insertsize_file`
         bam_meaninsertsize=`echo "scale=2; ${bam_meaninsertsize//,}/1" | bc -l`
