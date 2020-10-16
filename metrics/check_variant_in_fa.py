@@ -47,10 +47,11 @@ def parse_args():
 
     return parser.parse_args()
 
-def check_consensus_size(fasta_file, reference_index):
+def check_consensus_size(fasta_file, reference):
     """
     Returns a warning if the len of the consensus != len of reference
     """
+    reference_index = reference + ".fai"
     ret = True
     with open(reference_index, "r") as reference:
         for line in reference:
@@ -64,11 +65,11 @@ The variants can't be checked.\n""" % (len(record.seq), ref_len))
 
 def store_current_out(variant, consensus, reference, sample, window, deletion, insertion, variant_type, variant_match, context_match, out_list):
     ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS : variant.POS + window])
-    cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
+    cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + consensus.seq[variant.POS - 1 - deletion + insertion: variant.POS - deletion + insertion] + "." + consensus.seq[variant.POS - deletion + insertion : variant.POS + window - deletion + insertion])
     if variant_type == "deletion":
-        ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + variant.REF + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
+        ref_interval = str(reference.seq[variant.POS - window - 1 : variant.POS - 1] + "." + reference.seq[variant.POS - 1 : variant.POS + (len(variant.REF) - len(variant.ALT))] + "." + reference.seq[variant.POS + (len(variant.REF) - len(variant.ALT)) : variant.POS + window + (len(variant.REF) - len(variant.ALT))])
     elif variant_type == "insertion":
-        cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + variant.ALT + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
+        cons_interval = str(consensus.seq[variant.POS - window - deletion + insertion - 1 : variant.POS - 1 - deletion + insertion] + "." + consensus.seq[variant.POS - 1 - deletion + insertion : variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF))] + "." + consensus.seq[variant.POS - deletion + insertion + (len(variant.ALT) - len(variant.REF)) : variant.POS + window - deletion + insertion + (len(variant.ALT) - len(variant.REF))])
     out_list.append([
         str(variant.POS),
         variant.REF,
@@ -203,6 +204,8 @@ def main():
     main
     """
     args = parse_args()
+
+    check_consensus_size(args.consensus, args.reference)
 
     variants_list = check_variants(args.vcf, args.consensus, args.reference, args.window)
     print("POS\tREF\tALT\tALT_FREQ\tALT_DEPTH\tREF+-{window_size}\tCONSENSUS+-{window_size}\tVARIANT_MATCH_CONSENSUS\tCONTEXT_MATCH+-{window_size}".format(window_size=args.window))
