@@ -186,9 +186,7 @@ do
     samtools idxstats -@ 10 host_removal/${sample}/${sample}*.hybrid.sorted.bam | awk -v sample=$sample '{array[$1]=$3; pwet[$1]=$4; next} END {tot=0; unmapped=0; for (chr in array) {tot+=array[chr]; unmapped+=pwet[chr]}; tot+=unmapped; cov=array["MN908947.3"]; hum=tot-cov-unmapped; printf sample"\t"tot"\t"hum"\t%.2f\t"cov"\t%.2f\t"unmapped"\t%.2f\n", 100*hum/tot, 100*cov/tot, 100*unmapped/tot}' >> metrics/host_contamination_metrics.tsv
     samtools idxstats -@ 10 host_removal/${sample}/${sample}*.host_removed.sorted.bam | awk -v sample=$sample '{array[$1]=$3; pwet[$1]=$4; next} END {tot=0; unmapped=0; for (chr in array) {tot+=array[chr]; unmapped+=pwet[chr]}; tot+=unmapped; cov=array["MN908947.3"]; hum=tot-cov-unmapped; printf sample"\t"tot"\t"hum"\t%.2f\t"cov"\t%.2f\t"unmapped"\t%.2f\n", 100*hum/tot, 100*cov/tot, 100*unmapped/tot}' >> metrics/host_removed_metrics.tsv
 
-    ls metrics/dna/${sample}/kraken_metrics/${sample}*.kraken2_report
-    grep "Homo sapiens" metrics/dna/${sample}/kraken_metrics/${sample}*.kraken2_report
-    grep "Homo sapiens" metrics/dna/${sample}/kraken_metrics/${sample}*.kraken2_report | awk awk -v sample=$sample '{print sample"\t"$3"\t"$2}' >> metrics/kraken2_metrics.tsv
+    grep "Homo sapiens" metrics/dna/${sample}/kraken_metrics/${sample}*.kraken2_report | awk -v sample=$sample '{print sample"\t"$3"\t"$2}' >> metrics/kraken2_metrics.tsv
 
     echo "$sample,$cons_perc_N,$cons_len,$cons_GC,$cons_genome_frac,$cons_N_perkbp,$fq_surviving_trim,$bam_aln,$bam_surviving_filter,$bam_surviving_primertrim,$bam_meancov,$bam_mediancov,$bam_maxmincovmean,$bam_cov20X,$bam_cov50X,$bam_cov100X,$bam_cov250X,$bam_cov500X,$bam_cov1000X,$bam_cov2000X,$bam_meaninsertsize,$bam_medianinsertsize,$bam_sdinsertsize,$bam_mininsertsize,$bam_maxinsertsize" >> metrics/metrics.csv
     # break
