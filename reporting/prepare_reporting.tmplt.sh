@@ -6,6 +6,7 @@
 set -eu -o pipefail
 
 # Load Modules
+echo "Loading modules..."
 module purge 
 module load mugqic/R_Bioconductor/3.5.3_3.8
 module load mugqic/bcftools/1.9
@@ -16,16 +17,40 @@ GENPIPES_VERSION="genpipes/covid_release/1.0"
 
 # Define samples and names
 RUN_NAME=""
-RUN_PATH="${PROJ}/hgalvez/sample_reporting/${RUN_NAME}"
+RUN_PATH="/genfs/projects/COVID_full_processing/illumina/${RUN_NAME}"
 cd ${RUN_PATH}
+
+# Run Collect Metrics Script
+echo "Collecting metrics..."
 bash ${COLLECT_METRICS} ${RUN_PATH}/readset.txt
 
+# Create ncov_tools links
+echo "Linking files for ncov_tools..."
+echo "sample,bam.path,fasta.path,tsv.path" > output_file_paths.csv
+for item in $(cut -f 1 readset.txt | grep -v Sample); do
+    bash ${REPORT_TMPLTS}/find_files.sh ${item} >> output_file_paths.csv
+done
+
+# Create reporting scripts
 mkdir -p report/sample_reports 
 cd ${RUN_PATH}/report
 
+echo "Copying template scripts..."
 cp ${REPORT_TMPLTS}/run_report.tmplt.Rmd run_report.Rmd
 cp ${REPORT_TMPLTS}/generate_report_tables.tmplt.R generate_report_tables.R
+cp ${REPORT_TMPLTS}/prepare_ncov_tools.tmplt.R prepare_ncov_tools.R 
+echo "cd $(pwd -P)/ncov_tools" > ncov_tools/snakemake_run_all.sh 
+cat ${REPORT_TMPLTS}/snakemake_run_all.tmplt.sh >> ncov_tools/snakemake_run_all.sh
 
+# Prepare ncov_tools
+echo "Preparing to run ncov_tools..."
+Rscript prepare_ncov_tools.R
+cat ${REPORT_TMPLTS}/ncov_tools.config.tmplt.yaml | sed s:REPLACE-RUN:${RUN_NAME}: |\
+ sed s:REPLACE-NEG-CTLS:$(cat neg_controls.txt): > ncov_tools/config.yaml
+cat ${REPORT_TMPLTS}/ncov_tools.singularity.tmplt.sh | sed s:REPLACE-RUN:${RUN_NAME}: > ncov_tools/ncov_tools.singluarity.sh 
+sbatch ncov_tools/ncov_tools.singluarity.sh
+
+# Prepare run metadata
 echo "run_name , " ${RUN_NAME} > run_metadata.csv
 echo "genpipes_version , " ${GENPIPES_VERSION} >> run_metadata.csv
 grep "^cluster_server" ../CoVSeQ.config.trace.ini | sed s:=:,:g >> run_metadata.csv
@@ -34,13 +59,13 @@ grep -m 1 "^sequencing_technology" ../CoVSeQ.config.trace.ini | sed s:=:,:g >> r
 
 grep "^module_" ../CoVSeQ.config.trace.ini | sed s:=:,:g > module_table.tmp.csv
 
-#cat tracks.tmplt.R | sed s:REPLACE:$RUN_NAME:g > $RUN_NAME/tracks.${RUN_NAME}.R 
-#cat metricsPlots.tmplt.R | sed s:REPLACE:$RUN_NAME:g > $RUN_NAME/metricsPlots.${RUN_NAME}.R 
-
+# Generate report tables
 Rscript generate_report_tables.R
 
 # Prepare problematic variants count
 
+# Render report
 Rscript -e "rmarkdown::render('run_report.Rmd', output_format = 'all')"
 
+# Cleanup
 rm module_table.tmp.csv

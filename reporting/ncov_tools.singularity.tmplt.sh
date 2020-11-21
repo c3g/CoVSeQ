@@ -1,0 +1,41 @@
+#!/bin/bash 
+#SBATCH --time=48:00:00
+#SBATCH --mem=92G
+#SBATCH -N 1 -n 20
+#SBATCH -J ncov-tools_run
+
+# Load modules
+module purge 
+module load singularity/3.6 python/3.7
+echo "Finished loading modules..."
+
+export ENVDIR="/genfs/projects/analyste_dev/python_venvs/snakemake/bin/activate"
+
+# Activate python virtual env
+source ${ENVDIR}
+
+export NCOVTOOLS_SIGM="/genfs/projects/analyste_dev/singularity/images/ncovtool_beta.simg"
+
+# Define directories
+PROJ="/genfs/projects/COVID_full_processing/illumina"
+RUN="REPLACE-RUN"
+RUN_DIR="${PROJ}/${RUN}/report/ncov_tools"
+
+# Run commands
+cd ${RUN_DIR}
+
+singularity exec \
+    -B /genfs:/genfs \
+    -B /lustre01:/lustre01 \
+    -B /lustre02:/lustre02 \
+    -B /lustre03:/lustre03 \
+    -B /lustre04:/lustre04   \
+    -B /cvmfs:/cvmfs \
+    -B /project:/project \
+    -B /scratch:/scratch \
+    --cleanenv ${NCOVTOOLS_SIGM} \
+    bash ${RUN_DIR}/snakemake_run_all.sh
+
+
+deactivate
+

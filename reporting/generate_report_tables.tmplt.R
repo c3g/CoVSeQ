@@ -71,7 +71,7 @@ sample_status <- function(percent.N){
 read_tsv_plus <- function(sample.name){
 
     print(sample.name)
-    sample.var.tsv.path <- file.path("..", "variant", sample.name, paste0(sample.name, ".variants.tsv"))
+    sample.var.tsv.path <- Sys.glob(file.path("..", "variant", sample.name, paste0(sample.name, "*.tsv")))
     sample.var.tsv <- readr::read_tsv(sample.var.tsv.path)
 
     if (dim(sample.var.tsv) == 0){ 
