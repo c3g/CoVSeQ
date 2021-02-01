@@ -76,7 +76,7 @@ do
 
     # echo "$cons_perc_N"
 
-    cutadapt_file=`ls -t job_output/cutadapt/cutadapt.${sample}_*[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T*.*.*.o | head -n 1`
+    cutadapt_file=`ls -t job_output/cutadapt/cutadapt.${sample}*.o | head -n 1`
     fq_surviving_trim=`grep -oP 'Pairs written \(passing filters\):.*\(\K.*?(?=%)' $cutadapt_file`
 
 
