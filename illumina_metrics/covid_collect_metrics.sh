@@ -76,8 +76,8 @@ do
 
     # echo "$cons_perc_N"
 
-    readset_name=`grep "$sample" $readset | awk '{print $2}'`
-    cutadapt_file=`ls -t job_output/cutadapt/cutadapt.${readset_name}_*[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9].[0-9][0-9].[0-9][0-9].o | head -n 1`
+    readset_name=`grep "$sample" $readset | awk 'NR>1 {print $2}'`
+    cutadapt_file=`ls -t job_output/cutadapt/cutadapt.${readset_name}_*[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}.[0-9]{2}.[0-9]{2}.o | head -n 1`
     fq_surviving_trim=`grep -oP 'Pairs written \(passing filters\):.*\(\K.*?(?=%)' $cutadapt_file`
 
 
