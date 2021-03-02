@@ -14,12 +14,11 @@ export ENVDIR="/genfs/projects/analyste_dev/python_venvs/snakemake/bin/activate"
 # Activate python virtual env
 source ${ENVDIR}
 
-export NCOVTOOLS_SIGM="/genfs/projects/analyste_dev/singularity/images/ncovtool_beta.simg"
+export NCOVTOOLS_SIF="/genfs/projects/analyste_dev/singularity/images/ncov-tools_v1.1.sif"
 
 # Define directories
-PROJ="/genfs/projects/COVID_full_processing/illumina"
-RUN="REPLACE-RUN"
-RUN_DIR="${PROJ}/${RUN}/report/ncov_tools"
+PROJ="REPLACE-PWD"
+RUN_DIR="${PROJ}/ncov_tools"
 
 # Run commands
 cd ${RUN_DIR}
@@ -33,7 +32,7 @@ singularity exec \
     -B /cvmfs:/cvmfs \
     -B /project:/project \
     -B /scratch:/scratch \
-    --cleanenv ${NCOVTOOLS_SIGM} \
+    --cleanenv ${NCOVTOOLS_SIF} \
     bash ${RUN_DIR}/snakemake_run_all.sh
 
 

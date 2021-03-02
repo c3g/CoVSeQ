@@ -13,16 +13,12 @@ module load mugqic/bcftools/1.9
 PROJ="/lustre03/project/6007512/C3G/projects/Moreira_COVID19_Genotyping"
 REPORT_TMPLTS="${PROJ}/hgalvez/CoVSeQ/reporting"
 COLLECT_METRICS="${PROJ}/hgalvez/CoVSeQ/metrics/covid_collect_metrics.sh"
-GENPIPES_VERSION="genpipes/covid_release/1.0"
+GENPIPES_VERSION="genpipes/covid_release/1.1_beta"
 
 # Define samples and names
 RUN_NAME=""
 RUN_PATH="/genfs/projects/COVID_full_processing/illumina/${RUN_NAME}"
 cd ${RUN_PATH}
-
-# Run Collect Metrics Script
-echo "Collecting metrics..."
-bash ${COLLECT_METRICS} ${RUN_PATH}/readset.txt
 
 # Create ncov_tools links
 echo "Linking files for ncov_tools..."
@@ -30,6 +26,12 @@ echo "sample,bam.path,fasta.path,tsv.path" > output_file_paths.csv
 for item in $(cut -f 1 readset.txt | grep -v Sample); do
     bash ${REPORT_TMPLTS}/find_files.sh ${item} >> output_file_paths.csv
 done
+
+# Run Collect Metrics Script
+echo "Collecting metrics..."
+cp ${REPORT_TMPLTS}/prepare_collect_metrics.tmplt.R prepare_collect_metrics.R 
+Rscript prepare_collect_metrics.R
+bash ${COLLECT_METRICS} ${RUN_PATH}/report.readset.txt
 
 # Create reporting scripts
 mkdir -p report/sample_reports 
@@ -47,7 +49,7 @@ echo "Preparing to run ncov_tools..."
 Rscript prepare_ncov_tools.R
 cat ${REPORT_TMPLTS}/ncov_tools.config.tmplt.yaml | sed s:REPLACE-RUN:${RUN_NAME}: |\
  sed s:REPLACE-NEG-CTLS:$(cat neg_controls.txt): > ncov_tools/config.yaml
-cat ${REPORT_TMPLTS}/ncov_tools.singularity.tmplt.sh | sed s:REPLACE-RUN:${RUN_NAME}: > ncov_tools/ncov_tools.singluarity.sh 
+cat ${REPORT_TMPLTS}/ncov_tools.singularity.tmplt.sh | sed s:REPLACE-PWD:$(pwd -P): > ncov_tools/ncov_tools.singluarity.sh 
 sbatch ncov_tools/ncov_tools.singluarity.sh
 
 # Prepare run metadata
