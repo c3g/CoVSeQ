@@ -107,6 +107,7 @@ metrics.table.path <- file.path("..", "metrics", "metrics.csv")
 host.metrics.table.path <- file.path("..", "metrics", "host_contamination_metrics.tsv")
 metadata.path <- file.path("run_metadata.csv")
 module.path <- file.path("module_table.tmp.csv")
+output.files.path <- file.path("..", "output_file_paths.csv")
 
 
 ###############################################################################
@@ -116,6 +117,7 @@ metrics.table <- readr::read_csv(metrics.table.path)
 host.metrics.table <- readr::read_tsv(host.metrics.table.path)
 metadata.table <- readr::read_csv(metadata.path, col_names = c("category", "value"))
 module.table <- readr::read_csv(module.path, col_names = c("category", "value"))
+file.table <- readr::read_csv(output.files.path, na = c("", " ", "NULL"))
 
 ###############################################################################
 # Produce software versions table 
@@ -142,7 +144,6 @@ final.column.names <- c("Sample",
  #                       "Potential Frameshifts", 
                         "PASS/FLAG/REJ")
 
-
 ## Calculate variant numbers 
 
 variant.numbers <- tibble(
@@ -152,7 +153,11 @@ variant.numbers <- tibble(
 #  frameshift = numeric()
 )
 
-for (sample in readset.table$Sample) {
+with.vcf <- file.table %>% filter(!is.na(tsv.path)) %>% pull(sample)
+
+readset.table.vcf <- readset.table %>% filter(Sample %in% with.vcf)
+
+for (sample in readset.table.vcf$Sample) {
   vcf.table <- read_tsv_plus(sample)
   write_csv(vcf.table, path = file.path("sample_reports", paste0(sample, "_tsv_info.csv")))
   var.num.10 <- vcf.table %>% filter(alt.FREQ > 0.10) %>% tally() %>% pull(n)
@@ -160,6 +165,10 @@ for (sample in readset.table$Sample) {
 #  frameshift <- vcf.table %>% filter(frameshift == TRUE) %>% tally() %>% pull(n)
   variant.numbers <- add_row(variant.numbers, Sample = sample, var.num.10.more = var.num.10, var.num.75.more = var.num.75) 
 }
+
+host.metrics.table <- host.metrics.table %>% 
+    mutate(total.reads = Total_aligned + Unmapped_only) %>% 
+    mutate(Human_only_perc = round(Human_only_perc, 2)) 
 
 
 ## Join all tables 
@@ -173,9 +182,7 @@ full.table <- full.table %>% mutate(cons.per.N = as.numeric(cons.per.N))
 sample.status <- full.table %>% pull(cons.per.N) %>% map(sample_status) %>% unlist()
 
 full.table <- full.table %>% 
-                  mutate(total.reads = Total_aligned + Unmapped_only) %>% 
                   mutate(status = sample.status) %>% 
-                  mutate(Human_only_perc = round(Human_only_perc, 2)) %>% 
                   mutate(consensus.length = 29903 - (cons.per.N /100 * 29903)) %>% mutate(consensus.length = as.integer(consensus.length)) %>% 
                   mutate(length.lowcov = 29903 - (bam.perc.20x /100 * 29903)) %>% mutate(length.lowcov = as.integer(length.lowcov)) 
                   

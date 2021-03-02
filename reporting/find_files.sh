@@ -8,14 +8,18 @@ export SAMPLEID=${1}
 
 echo $SAMPLEID "," $(find alignment/ -name ${SAMPLEID}.sorted.filtered.primerTrim.bam -type f) \
     "," $(find consensus/ -name ${SAMPLEID}.consensus.*.fasta -type f) \
-    "," $(find variant/ -name ${SAMPLEID}.sorted.filtered.primerTrim.tsv -type f)
+    "," $(find variant/ -name ${SAMPLEID}.*tsv -type f)
 
 mkdir -p report/ncov_tools/data 
-ln -fs $(pwd -P )/$(find alignment/ -name ${SAMPLEID}.sorted.filtered.primerTrim.bam -type f) \
-    report/ncov_tools/data/${SAMPLEID}.mapped.primertrimmed.sorted.bam
-
-ln -fs $(pwd -P )/$(find consensus/ -name ${SAMPLEID}.consensus.*.fasta -type f) \
-    report/ncov_tools/data/${SAMPLEID}.consensus.fasta
-
-ln -fs $(pwd -P )/$(find variant/ -name ${SAMPLEID}.sorted.filtered.primerTrim.tsv -type f) \
-    report/ncov_tools/data/${SAMPLEID}.variants.tsv
+if [ "$(find alignment/ -name ${SAMPLEID}.sorted.filtered.primerTrim.bam -type f)" != "" ] && \
+   [ "$(find consensus/ -name ${SAMPLEID}.consensus.*.fasta -type f)" != "" ] && \
+   [ "$(find variant/ -name ${SAMPLEID}*tsv -type f)" != "" ]; then
+        ln -fs $(pwd -P )/$(find alignment/ -name ${SAMPLEID}.sorted.filtered.primerTrim.bam -type f) \
+            report/ncov_tools/data/${SAMPLEID}.mapped.primertrimmed.sorted.bam
+        
+        ln -fs $(pwd -P )/$(find consensus/ -name ${SAMPLEID}.consensus.*.fasta -type f) \
+            report/ncov_tools/data/${SAMPLEID}.consensus.fasta
+        
+        ln -fs $(pwd -P )/$(find variant/ -name ${SAMPLEID}.*tsv -type f) \
+            report/ncov_tools/data/${SAMPLEID}.variants.tsv
+fi
