@@ -21,7 +21,7 @@ complete.samples <- file.table %>% filter(!is.na(bam.path) & !is.na(fasta.path) 
 ncov.tools.metadata <- tibble(sample = complete.samples, ct = NA, date = NA)
 
 # Write a string with the negative controls for later configuration setup
-neg.controls <- ncov.tools.metadata %>% filter(str_detect(sample, regex("(negctrl|ext)|ntc", ignore_case = TRUE))) %>% pull(sample)
+neg.controls <- ncov.tools.metadata %>% filter(str_detect(sample, regex("((negctrl|ext)|ntc)|ctrl_neg", ignore_case = TRUE))) %>% pull(sample)
 neg.controls <- str_c(neg.controls, collapse = "\",\"")
 neg.controls <- paste0("\"", neg.controls, "\"")
 if (neg.controls == "\"\""){

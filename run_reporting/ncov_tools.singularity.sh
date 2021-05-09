@@ -1,5 +1,5 @@
 #!/bin/bash 
-#SBATCH --time=48:00:00
+#SBATCH --time=12:00:00
 #SBATCH --mem=92G
 #SBATCH -N 1 -n 20
 #SBATCH -J ncov-tools_run
