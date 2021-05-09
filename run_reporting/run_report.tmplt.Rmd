@@ -1,0 +1,162 @@
+---
+title: "CoVSeQ Run Report"
+author: "CoVSeQ"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+    pdf_document: default
+urlcolor: blue
+---
+
+```{r setup.libraries, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(VariantAnnotation))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(tidyverse))
+set.seed(123456789)
+
+# This template requires first running the `generate_report_tables.R` script
+# It will parse those output tables, re-format them and produce a PDF document. 
+
+report.version = "0.0.2beta"
+```
+
+```{r setup.inputs, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+###############################################################################
+# Read input tables 
+run.metadata <- readr::read_csv("run_metadata.csv", col_names = c("variable", "value"))
+sftwr.env.table <- readr::read_csv("software_versions.csv")
+bioinf.metrics <- readr::read_csv("report_metrics.csv")
+```
+
+```{r setup.variables, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+# Report variables
+run.name <- run.metadata %>% filter(variable == "run_name") %>% pull(value)
+platform.name <- run.metadata %>% filter(variable == "sequencing_technology")%>% pull(value)
+genpipes.version <- run.metadata %>% filter(variable == "genpipes_version") %>% pull(value)
+reference.genome <- run.metadata %>% filter(variable == "assembly_synonyms") %>% pull(value)
+cluster.name <- run.metadata %>% filter(variable == "cluster_server") %>% pull(value)
+```
+  
+```{r setup.tables, include=FALSE}  
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+# Report tables
+sample.table <- bioinf.metrics %>% dplyr::select(Sample)
+sample.number <- sample.table %>% tally() %>% pull(n)
+pass.samples <- bioinf.metrics %>% filter(`PASS/FLAG/REJ` == "PASS") %>% tally() %>% pull(n)
+flag.samples <- bioinf.metrics %>% filter(`PASS/FLAG/REJ` == "FLAG") %>% tally() %>% pull(n)
+rej.samples <- bioinf.metrics %>% filter(`PASS/FLAG/REJ` == "REJ" ) %>% tally() %>% pull(n)
+
+```
+
+Run: **`r run.name`**
+
+Platform: **`r platform.name`**
+
+---
+
+# 1. Laboratory Protocol Summary
+
+`Table will be added here`
+
+---
+
+# 2. Bioinformatics Analysis Summary
+
+## 2.1 Pipeline Information
+
+This run was processed using the **GenPipes** `covseq.py` pipeline version: **`r genpipes.version`**
+
+- The full source code of the pipeline can be found in this [repository](https://bitbucket.org/mugqic/genpipes/src/covid_1.0/)
+- For the full GenPipes Documentation please consult this [website](https://genpipes.readthedocs.io/en/latest/)
+- For a full breakdown of the `covseq.py` pipeline please consult this [website](https://c3g.github.io/covseq_McGill/SARS_CoV2_Sequencing/Illumina_overview.html)
+
+### 2.1.1 CoVSeQ Pipeline Summary 
+
+The CoVSeQ pipeline consists of the following steps: 
+
+1. Host reads removal 
+2. Trim sequencing adaptor with `cutadapt`
+3. Align reads with `bwa mem` and filter the bam file
+4. Mapped reads are filtered with `sambamba` and `awk`
+5. Trim Amplicon primers with `ivar` and `samtools`
+6. Call variants with `ivar` and `samtools`
+7. Generate consensus FASTA with `ivar` and `samtools`
+8. Compute metrics with `quast` and custom scripts
+
+For the full details of each step, please consult the [documentation](https://c3g.github.io/covseq_McGill/SARS_CoV2_Sequencing/Illumina_overview.html). 
+
+## 2.2 Reference Genome Information
+
+This run was processed using the following reference genome: **`r reference.genome`**
+
+ * To download the reference sequence, please consult the following online [archive](https://www.ncbi.nlm.nih.gov/nuccore/MN908947).   
+
+## 2.3 Computing Environment Information
+
+This run was processed in the following computing environment: 
+
+- Server: **`r cluster.name`**
+
+```{r softwr_vers}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+
+knitr::kable(sftwr.env.table, booktabs = TRUE, longtable = TRUE) %>% 
+  kable_styling(latex_options = c("repeat_header"))
+
+```
+
+---
+
+# 3. Results 
+
+## 3.1 Sample Information Summary
+
+A total of **`r sample.number`** were included in this run. 
+
+
+## 3.2 Consensus Sequence Status Summary
+
+For the purposes of this report, a consensus sequence can be labelled as: 
+
+- *Pass*: if it has <1% missing bases (Ns)
+- *Flag*: if it has >1% but <5% missing bases (Ns)
+- *Rej*: if it has >5% missing bases (Ns)
+
+Of the total samples in this run: 
+
+- `r pass.samples` consensus sequences were labelled as "Pass". 
+- `r flag.samples` consensus sequences were labelled as "Flag". 
+- `r rej.samples` consensus sequences were labelled as "Rej". 
+
+
+## 3.3 Full Sample Metrics
+
+The following metrics were calculated for all the samples: 
+
+```{r bioinf_metrics}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+knitr::kable(bioinf.metrics, booktabs = TRUE, longtable = TRUE, caption = "Full Sample Metrics")  %>%
+  kable_styling(full_width = T, font_size = 7, latex_options = c("repeat_header")) %>% 
+  column_spec(1, width = "10em") %>% 
+  landscape()
+
+```
+
+This table is also available as a [csv file](report_metrics.csv) and a [tsv file](report_metrics.tsv). Additional metrics can be found in the full processing results under `metrics`. 
+
+### 3.3.1 Individual Sample Reports
+
+Individual sample variant reports can be found in the following [subdirectory](sample_reports/).
+
+---
+
+**Epilogue**
+
+This report was automatically generated by on: **`r format(Sys.time(), '%d %B, %Y')`.**
+
+*Report version: `r report.version`*
+

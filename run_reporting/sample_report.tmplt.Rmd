@@ -1,0 +1,86 @@
+---
+title: "Rapport clinique pour les hôpitaux"
+author: "CoVSeQ"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(scales))
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(VariantAnnotation))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(tidyverse))
+set.seed(123456789)
+
+###############################################################################
+
+#Define parsers
+## Prepare CSV read function
+read_csv_plus <- function(tech) {
+  metrics.file.path <- paste0(tech, ".metrics.csv")
+  tmp.tibble <- read_csv(metrics.file.path)
+  bind_cols(tmp.tibble) %>%
+    mutate(., technology = tech)
+}
+
+
+# Define standard reference files
+CoV2.genome <- Seqinfo(seqnames = c("MN908947.3"), seqlengths = c(29903), isCircular=c(FALSE), genome="SARSCoV2") 
+CoV2.seqInfo <- toGRanges("CoV2.seqInfo.tsv")
+CoV2.cytobands <- toGRanges("CoV2.cytoband.tsv")
+
+###############################################################################
+
+# Input information
+
+
+sample.name <- "REPLACE-SMPL"
+platform.name <- "REPLACE-PLATFORM"
+
+
+# Modified input information
+final.sample.name <- stringr::str_remove(sample.name, "_[[:digit:]]$")
+
+
+
+metrics.path <- file.path("metrics", paste0(sample.name, ".metrics.csv"))
+vcf.path <- file.path("pass_vcf", paste0(sample.name, ".pass.vcf"))
+
+
+# VCF parsing and information
+full.vcf <- readVcf(vcf.path)
+
+# Metrics parsing and information
+metrics.table <- read_csv(metrics.path)
+
+
+
+
+```
+
+- *Identifiant de l’échantillon:* `r final.sample.name`
+- *Date de collecte:* 
+- *Technologie de séquençage:* `r platform.name`
+- *Longueur de la séquence:* `r consensus.length` / 29903 pb (référence) 
+- *Clade:* 
+- *Variants:* 
+```{r variants-table}
+knitr::kable(parsed_vcf)
+```
+- *Qualité*
+
+```{r quality-table}
+knitr::kable(parsed_QC)
+```
+
+- *Qualité globale:* `r final.sample.flag`
+
+- *Séquence:* [example link](https://covseq.ca/data/centre_hospitalier_anna-laberge/L00240556.fasta)
+- *Phylogénie:* [example_link](https://covseq.ca/ncov?f_province=Quebec&s=Canada/Qc-L00241355/2020) 
+- *Méthode:* [Methods](https://covseq.ca/methods)
+
+

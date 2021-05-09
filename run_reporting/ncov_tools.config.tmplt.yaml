@@ -1,0 +1,53 @@
+# path to the top-level directory containing the analysis results
+data_root: data
+
+# optionally the plots can have a "run name" prefix. If this is not defined the prefix will be "default"
+run_name: REPLACE-RUN
+
+# path to the file containing the amplicon regions (not the primer sites, the actual amplicons)
+amplicon_bed: /genfs/projects/analyste_dev/artic_network/ncov-tools/etc/nCov-2019.V3.regions.bed
+
+# path to the nCov reference genome
+reference_genome: /cvmfs/ref.mugqic/genomes/species/Coronavirinae.SARS-CoV-2/genome/Coronavirinae.SARS-CoV-2.fa
+
+# the sequencing platform used, can be "oxford-nanopore" or "illumina"
+platform: "illumina"
+
+# path to the BED file containing the primers, this should follow the format downloaded from
+# the ARTIC primer
+primer_bed: /genfs/projects/analyste_dev/artic_network/artic-ncov2019/primer_schemes/nCoV-2019/V3/nCoV-2019.bed
+
+# offset for the amplicons and primers
+offset: 0
+
+# minimum completeness threshold for inclusion to the SNP tree plot, if no entry
+# is provided the default is set to 0.75
+completeness_threshold: 0.9
+
+# the naming convention for the bam files
+# this can use the variables {data_root} (as above) and {sample}
+# As per the example above, this will expand to run_200431/sampleA.sorted.bam for sampleA
+bam_pattern: "{data_root}/{sample}.mapped.primertrimmed.sorted.bam"
+
+# the naming convention for the consensus sequences
+consensus_pattern: "{data_root}/{sample}.consensus.fasta"
+
+# the naming convention for the variants file, NF illumina runs typically use
+# "{data_root}/{sample}.variants.tsv and oxford nanopore runs use "{data_root}/{sample}.pass.vcf.gz"
+variants_pattern: "{data_root}/{sample}.variants.tsv"
+
+metadata: "metadata.tsv"
+
+#
+# if a list of sample IDs for negative controls is provided, a report containing the amount
+# of coverage detected in the negative controls can be generated
+negative_control_samples: [ REPLACE-NEG-CTLS ]
+
+#
+# when building a tree of the consensus genomes you can optionally include other sequences
+# in the tree by providing a fasta file here
+# tree_include_consensus: some_genomes_from_gisaid.fasta
+
+#
+# set this flag to true to include lineage assignments with pangolin in the output plots
+assign_lineages: true
