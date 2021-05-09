@@ -202,6 +202,7 @@ final.columns <- c("Sample",
                    "status")
 
 final.table <- full.table %>% dplyr::select(final.columns) %>% rename_at(vars(final.columns), ~final.column.names)
+final.table <- final.table %>% distinct()
 
 write_csv(final.table, path = "report_metrics.csv")
 write_tsv(final.table, path = "report_metrics.tsv")
