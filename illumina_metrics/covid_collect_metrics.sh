@@ -2,6 +2,10 @@
 
 readset=$1
 
+if [[ -z "$readset" ]]; then
+   break
+fi
+
 module load mugqic/python/3.7.3
 # module load mugqic/sambamba/0.7.0
 module load mugqic/samtools/1.10
@@ -78,7 +82,7 @@ do
 
     # echo "$cons_perc_N"
 
-    readset_name=`grep "$sample" $readset | awk 'NR>1 {print $2}'`
+    readset_name=`grep "$sample" $readset | awk '{print $2}'`
     cutadapt_file=`ls -t job_output/cutadapt/cutadapt.${readset_name}_*[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}.[0-9]{2}.[0-9]{2}.o | head -n 1`
     fq_surviving_trim=`grep -oP 'Pairs written \(passing filters\):.*\(\K.*?(?=%)' $cutadapt_file`
 
