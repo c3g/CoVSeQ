@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 # Load libraries
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(VariantAnnotation))
