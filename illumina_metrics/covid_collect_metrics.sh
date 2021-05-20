@@ -6,9 +6,9 @@ if [[ -z "$readset" ]]; then
    break
 fi
 
-module load mugqic/python/3.7.3
+# module load mugqic/python/3.7.3
 # module load mugqic/sambamba/0.7.0
-module load mugqic/samtools/1.10
+# module load mugqic/samtools/1.10
 
 cat /dev/null > metrics/metrics.csv
 cat /dev/null > metrics/host_contamination_metrics.tsv
