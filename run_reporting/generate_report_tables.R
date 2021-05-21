@@ -135,6 +135,8 @@ argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
+print(args)
+
 if(is.null(argsDF$report_readset)) {
   print("The argument --report_readset= is mandatory")
   break
