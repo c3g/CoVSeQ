@@ -11,7 +11,7 @@ set.seed(123456789)
 CoV2.genome <- Seqinfo(seqnames = c("MN908947.3"), seqlengths = c(29903), isCircular=c(FALSE), genome="SARSCoV2")
 
 read_vcf_plus <- function(sample.name){
-  print(sample.name)
+  # print(sample.name)
   sample.vcf.path <- file.path("..","variant", sample.name, paste0(sample.name,".sorted.filtered.primerTrim.annotate.vcf"))
   sample.vcf <- readVcf(sample.vcf.path, CoV2.genome)
   
@@ -72,7 +72,7 @@ sample_status <- function(percent.N){
 
 read_tsv_plus <- function(sample.name){
 
-    print(sample.name)
+    # print(sample.name)
     sample.var.tsv.path <- Sys.glob(file.path("variant", sample.name, paste0(sample.name, "*.tsv")))
     sample.var.tsv <- readr::read_tsv(sample.var.tsv.path)
 
@@ -197,7 +197,7 @@ final.column.names <- c("Sample",
                         "Length consensus",
                         "Nb variants > 10 perc allele freq",
                         "Nb variants > 75 perc allele freq",
- #                       "Potential Frameshifts", 
+                        # "Potential Frameshifts",
                         "PASS/FLAG/REJ")
 
 ## Calculate variant numbers 
