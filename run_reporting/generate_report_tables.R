@@ -73,7 +73,7 @@ sample_status <- function(percent.N){
 read_tsv_plus <- function(sample.name){
 
     print(sample.name)
-    sample.var.tsv.path <- Sys.glob(file.path("..", "variant", sample.name, paste0(sample.name, "*.tsv")))
+    sample.var.tsv.path <- Sys.glob(file.path("variant", sample.name, paste0(sample.name, "*.tsv")))
     sample.var.tsv <- readr::read_tsv(sample.var.tsv.path)
 
     if (dim(sample.var.tsv) == 0){ 
@@ -138,7 +138,7 @@ parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 argsDF <- as.data.frame(t(do.call("rbind", parseArgs(args))), stringsAsFactors=FALSE)
 colnames(argsDF) <- argsDF[1, ]
 argsDF <- as.data.frame(argsDF[-1,])
-print(argsDF)
+# print(argsDF)
 
 if(is.null(argsDF$report_readset)) {
   print("The argument --report_readset= is mandatory")
