@@ -124,7 +124,7 @@ if("--help" %in% args) {
       --help                          - print this text
  
       Example:
-      Rscript generate_report_tables.R --readset=report.readset.tsv --metrics=metrics.csv --host_contamination_metrics=host_contamination_metrics.tsv \n\n")
+      Rscript generate_report_tables.R --report_readset=report.readset.tsv --metrics=metrics.csv --host_contamination_metrics=host_contamination_metrics.tsv \n\n")
  
   q(save="no")
 }
@@ -135,17 +135,17 @@ argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
-if(is.null(args$report_readset)) {
+if(is.null(argsDF$report_readset)) {
   print("The argument --report_readset= is mandatory")
   break
 }
 
-if(is.null(args$metrics)) {
+if(is.null(argsDF$metrics)) {
   print("The argument --metrics= is mandatory")
   break
 }
 
-if(is.null(args$host_contamination_metrics)) {
+if(is.null(argsDF$host_contamination_metrics)) {
   print("The argument --host_contamination_metrics= is mandatory")
   break
 }
