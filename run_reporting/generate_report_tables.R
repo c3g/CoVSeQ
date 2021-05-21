@@ -131,11 +131,14 @@ if("--help" %in% args) {
  
 ## Parse arguments (we expect the form --arg=value)
 parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
-argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
-argsL <- as.list(as.character(argsDF$V2))
-names(argsL) <- argsDF$V1
+# argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
+# argsL <- as.list(as.character(argsDF$V2))
+# names(argsL) <- argsDF$V1
 
-print(docxtractr::assign_colnames(as.data.frame(t(do.call("rbind", parseArgs(args))), stringsAsFactors=FALSE)))
+argsDF <- as.data.frame(t(do.call("rbind", parseArgs(args))), stringsAsFactors=FALSE)
+colnames(argsDF) <- argsDF[1, ]
+argsDF <- as.data.frame(argsDF[-1,])
+print(argsDF)
 
 if(is.null(args$report_readset)) {
   print("The argument --report_readset= is mandatory")
