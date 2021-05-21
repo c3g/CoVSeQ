@@ -222,9 +222,8 @@ for (sample in report_readset.table$Sample) {
   variant.numbers <- add_row(variant.numbers, Sample = sample, var.num.10.more = var.num.10, var.num.75.more = var.num.75) 
 }
 
-host.metrics.table <- host.metrics.table %>% 
-    mutate(total.reads = Total_aligned + Unmapped_only) %>% 
-    mutate(Human_only_perc = round(Human_only_perc, 2)) 
+host.metrics.table <- host.metrics.table %>%
+    mutate(total.reads = Total_aligned + Unmapped_only)
 
 
 ## Join all tables 
