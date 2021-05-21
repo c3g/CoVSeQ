@@ -254,7 +254,7 @@ final.columns <- c("Sample",
                    "consensus.length",
                    "var.num.10.more",
                    "var.num.75.more",
-#                   "frameshift",
+                   # "frameshift",
                    "status")
 
 final.table <- full.table %>% dplyr::select(final.columns) %>% rename_at(vars(final.columns), ~final.column.names)
