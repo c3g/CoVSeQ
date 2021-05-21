@@ -140,17 +140,17 @@ colnames(argsDF) <- argsDF[1, ]
 argsDF <- as.data.frame(argsDF[-1,])
 print(argsDF)
 
-if(is.null(args$report_readset)) {
+if(is.null(argsDF$report_readset)) {
   print("The argument --report_readset= is mandatory")
   break
 }
 
-if(is.null(args$metrics)) {
+if(is.null(argsDF$metrics)) {
   print("The argument --metrics= is mandatory")
   break
 }
 
-if(is.null(args$host_contamination_metrics)) {
+if(is.null(argsDF$host_contamination_metrics)) {
   print("The argument --host_contamination_metrics= is mandatory")
   break
 }
@@ -167,9 +167,9 @@ metadata.path <- file.path("run_metadata.csv")
 
 ###############################################################################
 # Read input data
-report_readset.table <- readr::read_tsv(args$report_readset)
-metrics.table <- readr::read_csv(args$metrics) 
-host_contamination_metrics.table <- readr::read_tsv(args$host_contamination_metrics)
+report_readset.table <- readr::read_tsv(argsDF$report_readset)
+metrics.table <- readr::read_csv(argsDF$metrics) 
+host_contamination_metrics.table <- readr::read_tsv(argsDF$host_contamination_metrics)
 # metadata.table <- readr::read_csv(args$run_metadata, col_names = c("category", "value"))
 # module.table <- readr::read_csv(args$module_table, col_names = c("category", "value"))
 # file.table <- readr::read_csv(output.files.path, na = c("", " ", "NULL"))
