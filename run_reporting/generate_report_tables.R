@@ -223,7 +223,8 @@ for (sample in report_readset.table$Sample) {
 }
 
 host.metrics.table <- host.metrics.table %>%
-    mutate(total.reads = Total_aligned + Unmapped_only)
+    mutate(total.reads = Total_aligned + Unmapped_only)# %>%
+    # mutate(Human_only_perc = round(Human_only_perc, 2))
 
 
 ## Join all tables 
@@ -259,6 +260,6 @@ final.columns <- c("Sample",
 final.table <- full.table %>% dplyr::select(final.columns) %>% rename_at(vars(final.columns), ~final.column.names)
 final.table <- final.table %>% distinct()
 
-write_csv(final.table, path = "report_metrics.csv")
-write_tsv(final.table, path = "report_metrics.tsv")
+write_csv(final.table, path = "report/report_metrics.csv")
+write_tsv(final.table, path = "report/report_metrics.tsv")
 ###############################################################################
