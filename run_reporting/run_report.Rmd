@@ -26,9 +26,9 @@ report.version = "0.0.2beta"
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
 ###############################################################################
 # Read input tables 
-run.metadata <- readr::read_csv("run_metadata.csv", col_names = c("variable", "value"))
-sftwr.env.table <- readr::read_csv("software_versions.csv")
-bioinf.metrics <- readr::read_csv("report_metrics.csv")
+run.metadata <- readr::read_csv("report/run_metadata.csv", col_names = c("variable", "value"))
+sftwr.env.table <- readr::read_csv("report/software_versions.csv")
+bioinf.metrics <- readr::read_csv("report/report_metrics.csv")
 ```
 
 ```{r setup.variables, include=FALSE}
